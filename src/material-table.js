@@ -424,6 +424,9 @@ export default class MaterialTable extends React.Component {
 
   isRemoteData = (props) => !Array.isArray((props || this.props).data);
 
+  isOutsidePageNumbers = (props) =>
+    props.page !== undefined && props.totalCount !== undefined;
+
   onAllSelected = (checked) => {
     this.dataManager.changeAllSelected(
       checked,
@@ -500,7 +503,9 @@ export default class MaterialTable extends React.Component {
           this.props.onPageChange(page, query.pageSize);
       });
     } else {
-      this.dataManager.changeCurrentPage(page);
+      if (!this.isOutsidePageNumbers(this.props)) {
+        this.dataManager.changeCurrentPage(page);
+      }
       this.setState(this.dataManager.getRenderState(), () => {
         this.props.onPageChange &&
           this.props.onPageChange(page, this.state.pageSize);
@@ -903,13 +908,14 @@ export default class MaterialTable extends React.Component {
   renderFooter() {
     const props = this.getProps();
     if (props.options.paging) {
-      const currentPage = this.isRemoteData()
+      const isOutsidePageNumbers = this.isOutsidePageNumbers(props);
+      const currentPage = isOutsidePageNumbers
         ? Math.min(
             props.page,
             Math.floor(props.totalCount / this.state.pageSize)
           )
         : this.state.currentPage;
-      const totalCount = this.isRemoteData()
+      const totalCount = isOutsidePageNumbers
         ? props.totalCount
         : this.state.data.length;
       return (
